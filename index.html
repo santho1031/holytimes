@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Bible: A Visual Catalog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #111827; /* Dark background */
+            color: #F9FAFB;
+        }
+        .season-header {
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .season-header:hover {
+            transform: scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* --- Flip Card Styles --- */
+        .episode-card {
+            background-color: transparent;
+            perspective: 1000px;
+            min-height: 180px;
+        }
+        .episode-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .episode-card.is-flipped .episode-card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 1.25rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 1.5rem;
+            cursor: pointer;
+        }
+        .card-front {
+            background: rgba(31, 41, 55, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            text-align: left;
+        }
+        .card-back {
+            background: radial-gradient(circle, #4b5563 0%, #1f2937 100%);
+            transform: rotateY(180deg);
+            align-items: center;
+            text-align: center;
+        }
+        .title-text-shadow {
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.6);
+        }
+        
+        /* --- Colorful Tags --- */
+        .tag {
+            transition: transform 0.2s ease;
+            font-weight: 500;
+        }
+        
+        /* --- Progress Tracker & Completion Styles --- */
+        .progress-bar-bg {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+        .progress-bar-fg {
+            background: linear-gradient(to right, #4ade80, #22c55e);
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.5s ease-in-out;
+        }
+        .completion-check {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            color: #22c55e;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .episode-card.is-complete .completion-check {
+            opacity: 1;
+            transform: scale(1);
+            animation: pop-in 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        @keyframes pop-in {
+            0% { transform: scale(0.5); }
+            100% { transform: scale(1); }
+        }
+
+        /* --- Quiz Modal Styles --- */
+        .quiz-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .quiz-modal.is-visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .quiz-content {
+            background-color: #1f2937;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        #quiz-list li {
+            background-color: #4b5563;
+            color: white;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.5rem;
+            cursor: grab;
+            transition: background-color 0.2s, box-shadow 0.2s;
+            user-select: none;
+        }
+        #quiz-list li.dragging {
+            opacity: 0.5;
+        }
+        #quiz-list.correct li {
+            background-color: #22c55e; /* Green-500 */
+            box-shadow: 0 0 15px #22c55e;
+            animation: glow 1.5s infinite alternate;
+            cursor: default;
+        }
+        @keyframes glow {
+            from { box-shadow: 0 0 5px #22c55e; }
+            to { box-shadow: 0 0 20px #22c55e, 0 0 30px #34d399; }
+        }
+        .quiz-btn {
+             background: linear-gradient(to right, #6366f1, #8b5cf6);
+             color: white;
+             padding: 0.6rem 1.25rem;
+             border-radius: 9999px;
+             font-weight: 600;
+             transition: transform 0.2s, box-shadow 0.2s;
+             cursor: pointer;
+             border: none;
+             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .quiz-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-gray-900/70 backdrop-blur-lg px-4 sm:px-6 py-4">
+        <div class="container mx-auto">
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">The Bible Catalog</h1>
+            <p class="text-gray-400 mt-1 text-sm sm:text-base">An episodic journey. Click a card to flip.</p>
+            
+            <!-- Progress Tracker -->
+            <div id="progress-tracker" class="mt-4">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-sm font-medium text-green-400">Your Progress</span>
+                    <span id="progress-text" class="text-sm font-medium text-gray-400">0 / 0 Completed</span>
+                </div>
+                <div class="w-full progress-bar-bg h-2.5">
+                    <div id="progress-bar" class="progress-bar-fg" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content" class="container mx-auto px-4 sm:px-6 py-8">
+        <!-- Seasons and episodes will be dynamically injected here by JavaScript -->
+    </main>
+    
+    <!-- Quiz Modal -->
+    <div id="quiz-modal" class="quiz-modal">
+        <div class="quiz-content">
+            <h2 id="quiz-title" class="text-2xl font-bold text-white mb-4">Arrange in Order</h2>
+            <p class="text-gray-400 mb-6">Drag and drop the items into the correct sequence.</p>
+            <ul id="quiz-list"></ul>
+            <button id="close-quiz-btn" class="quiz-btn mt-6">Close</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900/50 mt-8">
+        <div class="container mx-auto px-6 py-4 text-center text-gray-500">
+            <p>&copy; 2024 Visual Bible Catalog. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        const data = {
+          "seasons": [
+            {
+              "title": "Season 1: Genesis",
+              "quote": "Beginnings of Everything",
+              "episodes": [
+                { "title": "Ep 1: Let There Be Light", "chapters": "Ch. 1–2", "subtitle": "Creation begins with a word, and the world comes to life.", "tags": ["Creation", "Order"], "quiz": { "ordered": ["God creates light and separates it from darkness.", "Sky, land, and seas are formed.", "Plants and celestial bodies appear.", "Animals fill the land and sea.", "Humans are created in God's image."], "jumbled": ["Animals fill the land and sea.", "Plants and celestial bodies appear.", "Humans are created in God's image.", "God creates light and separates it from darkness.", "Sky, land, and seas are formed."] } },
+                { "title": "Ep 2: The Fall", "chapters": "Ch. 3–5", "subtitle": "A bite of fruit, a fall from grace—where sin enters the story.", "tags": ["Sin", "Exile"], "quiz": { "ordered": ["The serpent tempts Eve.", "Eve and Adam eat the forbidden fruit.", "Their eyes are opened, and they hide.", "God confronts them and gives consequences.", "They are banished from Eden."], "jumbled": ["God confronts them and gives consequences.", "Eve and Adam eat the forbidden fruit.", "They are banished from Eden.", "The serpent tempts Eve.", "Their eyes are opened, and they hide."] } },
+                { "title": "Ep 3: The Flood", "chapters": "Ch. 6–9", "subtitle": "Judgment rains down, but a covenant rises with the rainbow.", "tags": ["Judgment", "Covenant"], "quiz": { "ordered": ["God tells Noah to build an ark.", "The animals and Noah's family enter.", "Floodwaters cover the earth.", "The waters recede and the ark rests.", "God makes a covenant with Noah."], "jumbled": ["Floodwaters cover the earth.", "God tells Noah to build an ark.", "God makes a covenant with Noah.", "The animals and Noah's family enter.", "The waters recede and the ark rests."] } },
+                { "title": "Ep 4: Tower & Nations", "chapters": "Ch. 10–11", "subtitle": "Ambition reaches the skies, but languages scatter the pride.", "tags": ["Pride", "Scattering"], "quiz": { "ordered": ["People settle in Shinar and build a tower.", "God sees their prideful ambition.", "God confuses their language.", "They stop building and scatter.", "Nations are formed with different tongues."], "jumbled": ["God confuses their language.", "They stop building and scatter.", "Nations are formed with different tongues.", "God sees their prideful ambition.", "People settle in Shinar and build a tower."] } },
+                { "title": "Ep 5: Abraham’s Walk", "chapters": "Ch. 12–23", "subtitle": "A man, a promise, and a journey to an unknown land.", "tags": ["Faith", "Promise"], "quiz": { "ordered": ["God calls Abraham to leave his homeland.", "Abraham journeys through Canaan.", "He receives the covenant of descendants.", "He nearly sacrifices Isaac.", "Sarah dies and is buried."], "jumbled": ["Abraham journeys through Canaan.", "He nearly sacrifices Isaac.", "Sarah dies and is buried.", "God calls Abraham to leave his homeland.", "He receives the covenant of descendants."] } },
+                { "title": "Ep 6: Jacob’s Hustle", "chapters": "Ch. 24–36", "subtitle": "Trickery, dreams, and wrestling with angels—Israel is born.", "tags": ["Struggle", "Blessing"], "quiz": { "ordered": ["Jacob tricks Esau out of his blessing.", "He flees to Laban and works for wives.", "God blesses him with flocks and children.", "Jacob wrestles with a divine being.", "He is renamed Israel."], "jumbled": ["He flees to Laban and works for wives.", "Jacob wrestles with a divine being.", "Jacob tricks Esau out of his blessing.", "He is renamed Israel.", "God blesses him with flocks and children."] } },
+                { "title": "Ep 7: Joseph’s Glow Up", "chapters": "Ch. 37–50", "subtitle": "From pit to palace, betrayal turns into blessing.", "tags": ["Forgiveness", "Power"], "quiz": { "ordered": ["Joseph dreams of greatness.", "His brothers sell him into slavery.", "He rises in Egypt through trials.", "He interprets Pharaoh's dreams.", "He forgives and saves his family."], "jumbled": ["He interprets Pharaoh's dreams.", "His brothers sell him into slavery.", "Joseph dreams of greatness.", "He rises in Egypt through trials.", "He forgives and saves his family."] } }
+              ]
+            },
+            {
+              "title": "Season 2: Exodus",
+              "quote": "Deliverance & Divine Presence",
+              "episodes": [
+                { "title": "Ep 1: Born to Deliver", "chapters": "Ch. 1–6", "subtitle": "A child saved by water, chosen to free a nation.", "tags": ["Moses", "Calling"], "quiz": { "ordered": ["Pharaoh oppresses Israel.", "A Levite woman hides her baby.", "Moses is raised in Pharaoh’s palace.", "He kills an Egyptian and flees.", "God speaks from a burning bush."], "jumbled": ["God speaks from a burning bush.", "Pharaoh oppresses Israel.", "He kills an Egyptian and flees.", "A Levite woman hides her baby.", "Moses is raised in Pharaoh’s palace."] } },
+                { "title": "Ep 2: Plagues of Power", "chapters": "Ch. 7–11", "subtitle": "Confrontation with Pharaoh unleashes nature’s fury.", "tags": ["Plagues", "Power"], "quiz": { "ordered": ["Moses confronts Pharaoh.", "The Nile turns to blood.", "Frogs, gnats, and flies plague Egypt.", "Livestock die and boils break out.", "Locusts and darkness precede the final warning."], "jumbled": ["Locusts and darkness precede the final warning.", "The Nile turns to blood.", "Frogs, gnats, and flies plague Egypt.", "Livestock die and boils break out.", "Moses confronts Pharaoh."] } },
+                { "title": "Ep 3: The First Passover", "chapters": "Ch. 12–13", "subtitle": "Blood on the doorposts, freedom in the night.", "tags": ["Passover", "Freedom"], "quiz": { "ordered": ["God gives Passover instructions.", "Families sacrifice lambs.", "Blood is spread on doorposts.", "The angel of death passes over.", "Israel leaves Egypt in haste."], "jumbled": ["Blood is spread on doorposts.", "God gives Passover instructions.", "Families sacrifice lambs.", "The angel of death passes over.", "Israel leaves Egypt in haste."] } },
+                { "title": "Ep 4: Split the Sea", "chapters": "Ch. 14–15", "subtitle": "Waters part, enemies drown, and a nation walks through.", "tags": ["Miracle", "Escape"], "quiz": { "ordered": ["Israel reaches the Red Sea.", "Pharaoh's army pursues.", "Moses parts the sea.", "Israel walks on dry ground.", "The waters return, drowning the army."], "jumbled": ["Israel walks on dry ground.", "Pharaoh's army pursues.", "Moses parts the sea.", "Israel reaches the Red Sea.", "The waters return, drowning the army."] } },
+                { "title": "Ep 5: Fire, Bread & Law", "chapters": "Ch. 16–20", "subtitle": "Bread from heaven and commandments from fire.", "tags": ["Law", "Covenant"], "quiz": { "ordered": ["Israel grumbles in the wilderness.", "God provides manna from heaven.", "Water flows from a rock at Horeb.", "Moses climbs Mount Sinai.", "God gives the Ten Commandments."], "jumbled": ["Moses climbs Mount Sinai.", "God provides manna from heaven.", "Israel grumbles in the wilderness.", "God gives the Ten Commandments.", "Water flows from a rock at Horeb."] } },
+                { "title": "Ep 6: The Golden Calf", "chapters": "Ch. 31–34", "subtitle": "While Moses meets God, the people craft an idol.", "tags": ["Idolatry", "Forgiveness"], "quiz": { "ordered": ["Moses tarries on Mount Sinai.", "The people ask Aaron for a god.", "Aaron makes a golden calf.", "Moses returns and breaks the tablets.", "Moses pleads for mercy and gets new tablets."], "jumbled": ["Moses returns and breaks the tablets.", "Aaron makes a golden calf.", "Moses pleads for mercy and gets new tablets.", "The people ask Aaron for a god.", "Moses tarries on Mount Sinai."] } }
+              ]
+            },
+            {
+              "title": "Season 3: Leviticus",
+              "quote": "The Way to Holiness",
+              "episodes": [
+                { "title": "Ep 1: Offerings", "chapters": "Ch. 1–7", "subtitle": "Burnt, grain, peace, sin, guilt—rituals to reconnect.", "tags": ["Rituals", "Atonement"], "quiz": { "ordered": ["Instructions for burnt offerings are given.", "Grain offerings symbolize thanksgiving.", "Peace offerings mark fellowship with God.", "Sin offerings are made for unintentional sins.", "Guilt offerings provide restitution and forgiveness."], "jumbled": ["Peace offerings mark fellowship with God.", "Sin offerings are made for unintentional sins.", "Grain offerings symbolize thanksgiving.", "Guilt offerings provide restitution and forgiveness.", "Instructions for burnt offerings are given."] } },
+                { "title": "Ep 2: Consecrated", "chapters": "Ch. 8–10", "subtitle": "Priests set apart, holy fire ignites, judgment strikes.", "tags": ["Priesthood", "Judgment"], "quiz": { "ordered": ["Moses anoints Aaron and his sons.", "Priests begin their ministry.", "God sends fire to consume the offering.", "Nadab and Abihu offer unauthorized fire.", "Fire from God consumes them as judgment."], "jumbled": ["Fire from God consumes them as judgment.", "Moses anoints Aaron and his sons.", "Nadab and Abihu offer unauthorized fire.", "God sends fire to consume the offering.", "Priests begin their ministry."] } },
+                { "title": "Ep 3: Clean & Unclean", "chapters": "Ch. 11–15", "subtitle": "From diet to disease, sacred boundaries are drawn.", "tags": ["Purity", "Law"], "quiz": { "ordered": ["God defines clean and unclean animals.", "Rules for childbirth purification are given.", "Leprous diseases are diagnosed by priests.", "Contaminated clothing and houses are inspected.", "Bodily discharges render a person unclean."], "jumbled": ["Contaminated clothing and houses are inspected.", "God defines clean and unclean animals.", "Bodily discharges render a person unclean.", "Leprous diseases are diagnosed by priests.", "Rules for childbirth purification are given."] } },
+                { "title": "Ep 4: Day of Atonement", "chapters": "Ch. 16–17", "subtitle": "One day. One priest. One offering for all.", "tags": ["Atonement", "Forgiveness"], "quiz": { "ordered": ["High priest enters the Most Holy Place.", "Blood is sprinkled for atonement.", "Two goats are chosen: one for sacrifice, one for scapegoat.", "Scapegoat is released into the wilderness.", "Atonement is made for the people."], "jumbled": ["Blood is sprinkled for atonement.", "Scapegoat is released into the wilderness.", "Atonement is made for the people.", "High priest enters the Most Holy Place.", "Two goats are chosen: one for sacrifice, one for scapegoat."] } },
+                { "title": "Ep 5: Sacred Codes", "chapters": "Ch. 18–22", "subtitle": "From sexual ethics to priestly honor—holiness in action.", "tags": ["Holiness", "Rules"], "quiz": { "ordered": ["God sets rules about sexual conduct.", "Israel is warned not to follow Canaanite practices.", "Priests must remain pure and undefiled.", "Offerings must be without defect.", "Holy things are to be treated with reverence."], "jumbled": ["Holy things are to be treated with reverence.", "Offerings must be without defect.", "Israel is warned not to follow Canaanite practices.", "Priests must remain pure and undefiled.", "God sets rules about sexual conduct."] } },
+                { "title": "Ep 6: Feasts & Jubilee", "chapters": "Ch. 23–25", "subtitle": "Celebrations of time, freedom, and restoration.", "tags": ["Feasts", "Jubilee"], "quiz": { "ordered": ["Sabbath is honored as holy rest.", "Passover and Unleavened Bread are celebrated.", "Firstfruits and Pentecost bring offerings.", "Day of Atonement and Tabernacles are kept.", "Jubilee year returns land and frees debt slaves."], "jumbled": ["Firstfruits and Pentecost bring offerings.", "Day of Atonement and Tabernacles are kept.", "Jubilee year returns land and frees debt slaves.", "Sabbath is honored as holy rest.", "Passover and Unleavened Bread are celebrated."] } },
+                { "title": "Ep 7: Blessings & Curses", "chapters": "Ch. 26", "subtitle": "A covenant of choice—walk in it or fall from it.", "tags": ["Covenant", "Choice"], "quiz": { "ordered": ["Obedience brings rain, harvest, and peace.", "God promises to dwell among His people.", "Disobedience brings fear, famine, and defeat.", "If unrepentant, destruction and exile follow.", "God still offers hope if they confess and return."], "jumbled": ["Disobedience brings fear, famine, and defeat.", "Obedience brings rain, harvest, and peace.", "If unrepentant, destruction and exile follow.", "God promises to dwell among His people.", "God still offers hope if they confess and return."] } },
+                { "title": "Ep 8: Devoted Things", "chapters": "Ch. 27", "subtitle": "Valuations, vows, and property devoted to God.", "tags": ["Vows", "Dedication"], "quiz": { "ordered": ["People make vows and pledges to God.", "Values are assigned to persons and animals.", "Land and homes dedicated must be redeemed.", "Unredeemed items become holy to the Lord.", "Tithes and offerings are declared sacred."], "jumbled": ["Unredeemed items become holy to the Lord.", "Tithes and offerings are declared sacred.", "People make vows and pledges to God.", "Land and homes dedicated must be redeemed.", "Values are assigned to persons and animals."] } }
+              ]
+            }
+          ]
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const mainContent = document.getElementById('main-content');
+            
+            const tagColorClasses = [
+                'bg-blue-400/20 text-blue-300',
+                'bg-red-400/20 text-red-300',
+                'bg-green-400/20 text-green-300',
+                'bg-yellow-400/20 text-yellow-300',
+                'bg-purple-400/20 text-purple-300',
+                'bg-pink-400/20 text-pink-300',
+                'bg-indigo-400/20 text-indigo-300'
+            ];
+
+            const getTagColorClass = (tag) => {
+                let hash = 0;
+                for (let i = 0; i < tag.length; i++) {
+                    hash = tag.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                const index = Math.abs(hash % tagColorClasses.length);
+                return tagColorClasses[index];
+            };
+
+            // --- Dynamic Content Generation ---
+            data.seasons.forEach((season, seasonIndex) => {
+                const seasonHtml = `
+                    <section id="season-${seasonIndex}" class="mb-20">
+                        <div class="season-header ${getSeasonGradient(seasonIndex)}">
+                            <h2 class="text-4xl md:text-5xl font-extrabold text-white title-text-shadow mb-2">${getSeasonIcon(seasonIndex)} ${season.title}</h2>
+                            <p class="text-xl md:text-2xl ${getSeasonQuoteColor(seasonIndex)} italic">“${season.quote}”</p>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            ${season.episodes.map((episode, episodeIndex) => {
+                                const quizId = `s${seasonIndex}-ep${episodeIndex}`;
+                                const tagsHtml = episode.tags ? episode.tags.map(tag => `<span class="tag text-xs px-3 py-1 rounded-full ${getTagColorClass(tag)}">${tag}</span>`).join('') : '';
+                                return `
+                                <div class="episode-card" data-quiz-id="${quizId}">
+                                    <div class="episode-card-inner">
+                                        <div class="card-front">
+                                            <div class="completion-check"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
+                                            <div class="flex justify-between items-start"><h3 class="text-xl font-bold text-white pr-2">${episode.title}</h3><span class="text-sm font-medium text-gray-400 flex-shrink-0">${episode.chapters}</span></div>
+                                            <div class="mt-4 flex flex-wrap gap-2">${tagsHtml}</div>
+                                        </div>
+                                        <div class="card-back">
+                                            <p class="text-gray-200 mb-4">${episode.subtitle}</p>
+                                            <button class="quiz-btn start-quiz-btn" 
+                                                data-jumbled='${JSON.stringify(episode.quiz.jumbled).replace(/'/g, "&apos;")}' 
+                                                data-ordered='${JSON.stringify(episode.quiz.ordered).replace(/'/g, "&apos;")}'>
+                                                Start Quiz
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </section>
+                `;
+                mainContent.innerHTML += seasonHtml;
+            });
+
+            function getSeasonGradient(index) {
+                const gradients = [
+                    'bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500',
+                    'bg-gradient-to-br from-red-500 via-orange-500 to-yellow-400',
+                    'bg-gradient-to-br from-yellow-300 via-stone-400 to-gray-200'
+                ];
+                return gradients[index % gradients.length];
+            }
+             function getSeasonQuoteColor(index) {
+                const colors = ['text-purple-200', 'text-yellow-200', 'text-gray-800'];
+                return colors[index % colors.length];
+            }
+            function getSeasonIcon(index) {
+                const icons = ['📕', '📘', '📙'];
+                return icons[index % icons.length];
+            }
+
+
+            // --- Setup after dynamic content is loaded ---
+            const STORAGE_KEY = 'bibleCatalogProgress';
+            const allQuizCards = document.querySelectorAll('.episode-card');
+            const totalQuizzes = allQuizCards.length;
+            let currentQuizId = null;
+
+            const getCompletedQuizzes = () => {
+                const progress = localStorage.getItem(STORAGE_KEY);
+                return progress ? JSON.parse(progress) : [];
+            };
+
+            const saveCompletedQuiz = (quizId) => {
+                let completed = getCompletedQuizzes();
+                if (!completed.includes(quizId)) {
+                    completed.push(quizId);
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(completed));
+                }
+            };
+
+            const updateProgressUI = () => {
+                const completed = getCompletedQuizzes();
+                const completedCount = completed.length;
+                const progressPercent = totalQuizzes > 0 ? (completedCount / totalQuizzes) * 100 : 0;
+
+                const progressBar = document.getElementById('progress-bar');
+                const progressText = document.getElementById('progress-text');
+                
+                if(progressBar && progressText){
+                    progressBar.style.width = `${progressPercent}%`;
+                    progressText.textContent = `${completedCount} / ${totalQuizzes} Completed`;
+                }
+
+                allQuizCards.forEach(card => {
+                    const quizId = card.dataset.quizId;
+                    if (completed.includes(quizId)) {
+                        card.classList.add('is-complete');
+                    }
+                });
+            };
+
+            allQuizCards.forEach(card => {
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('.start-quiz-btn')) return;
+                    card.classList.toggle('is-flipped');
+                });
+            });
+
+            const quizModal = document.getElementById('quiz-modal');
+            const quizList = document.getElementById('quiz-list');
+            const startQuizBtns = document.querySelectorAll('.start-quiz-btn');
+            const closeQuizBtn = document.getElementById('close-quiz-btn');
+            let correctOrder = [];
+
+            startQuizBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const card = btn.closest('.episode-card');
+                    currentQuizId = card.dataset.quizId;
+
+                    const jumbled = JSON.parse(btn.dataset.jumbled);
+                    correctOrder = JSON.parse(btn.dataset.ordered);
+                    
+                    populateQuiz(jumbled);
+                    quizModal.classList.add('is-visible');
+                });
+            });
+
+            closeQuizBtn.addEventListener('click', () => quizModal.classList.remove('is-visible'));
+            quizModal.addEventListener('click', (e) => {
+                if (e.target === quizModal) quizModal.classList.remove('is-visible');
+            });
+
+            function populateQuiz(items) {
+                quizList.innerHTML = '';
+                quizList.classList.remove('correct');
+                items.forEach(itemText => {
+                    const li = document.createElement('li');
+                    li.textContent = itemText;
+                    li.setAttribute('draggable', 'true');
+                    quizList.appendChild(li);
+                });
+            }
+
+            let draggedItem = null;
+            quizList.addEventListener('dragstart', (e) => {
+                draggedItem = e.target;
+                setTimeout(() => e.target.classList.add('dragging'), 0);
+            });
+            quizList.addEventListener('dragend', (e) => {
+                e.target.classList.remove('dragging');
+                checkOrder();
+            });
+            quizList.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(quizList, e.clientY);
+                const draggable = document.querySelector('.dragging');
+                if (afterElement == null) {
+                    quizList.appendChild(draggable);
+                } else {
+                    quizList.insertBefore(draggable, afterElement);
+                }
+            });
+
+            function getDragAfterElement(container, y) {
+                const draggableElements = [...container.querySelectorAll('li:not(.dragging)')];
+                return draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+                    if (offset < 0 && offset > closest.offset) {
+                        return { offset: offset, element: child };
+                    } else {
+                        return closest;
+                    }
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+            }
+            
+            function checkOrder() {
+                const currentItems = [...quizList.querySelectorAll('li')];
+                const currentOrder = currentItems.map(item => item.textContent);
+                const isCorrect = JSON.stringify(currentOrder) === JSON.stringify(correctOrder);
+
+                if (isCorrect) {
+                    quizList.classList.add('correct');
+                    currentItems.forEach(item => item.setAttribute('draggable', 'false'));
+                    if (currentQuizId) {
+                        saveCompletedQuiz(currentQuizId);
+                        updateProgressUI();
+                    }
+                }
+            }
+
+            updateProgressUI();
+        });
+    </script>
+
+</body>
+</html>
