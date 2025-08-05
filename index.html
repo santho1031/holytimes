@@ -11,14 +11,15 @@
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #111827; /* Dark background */
-            color: #F9FAFB;
+            background-color: #0c0a09; /* Darker, richer background: stone-950 */
+            color: #e7e5e4; /* stone-200 */
         }
         .season-header {
             border-radius: 1.5rem;
             padding: 2rem;
             margin-bottom: 2rem;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
         .season-header:hover {
             transform: scale(1.02);
@@ -57,13 +58,13 @@
             cursor: pointer;
         }
         .card-front {
-            background: rgba(31, 41, 55, 0.5);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(28, 25, 23, 0.5); /* stone-900 with opacity */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             text-align: left;
         }
         .card-back {
-            background: radial-gradient(circle, #4b5563 0%, #1f2937 100%);
+            background: #292524; /* stone-800 */
             transform: rotateY(180deg);
             align-items: center;
             text-align: center;
@@ -85,7 +86,7 @@
             overflow: hidden;
         }
         .progress-bar-fg {
-            background: linear-gradient(to right, #4ade80, #22c55e);
+            background: linear-gradient(to right, #34d399, #10b981); /* Emerald gradient */
             height: 100%;
             border-radius: 9999px;
             transition: width 0.5s ease-in-out;
@@ -94,7 +95,7 @@
             position: absolute;
             top: 1rem;
             right: 1rem;
-            color: #22c55e;
+            color: #34d399; /* Emerald-400 */
             opacity: 0;
             transform: scale(0.5);
             transition: opacity 0.3s ease, transform 0.3s ease;
@@ -131,7 +132,7 @@
             visibility: visible;
         }
         .quiz-content {
-            background-color: #1f2937;
+            background-color: #1c1917; /* stone-900 */
             padding: 2rem;
             border-radius: 1rem;
             width: 90%;
@@ -139,58 +140,60 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
         #quiz-list li {
-            background-color: #4b5563;
-            color: white;
+            background-color: #44403c; /* stone-700 */
+            color: #d6d3d1; /* stone-300 */
             padding: 0.75rem 1rem;
             margin-bottom: 0.5rem;
             border-radius: 0.5rem;
             cursor: grab;
-            transition: background-color 0.2s, box-shadow 0.2s;
+            transition: background-color 0.2s, box-shadow 0.2s, opacity 0.2s;
             user-select: none;
         }
         #quiz-list li.dragging {
             opacity: 0.5;
         }
         #quiz-list.correct li {
-            background-color: #22c55e; /* Green-500 */
-            box-shadow: 0 0 15px #22c55e;
+            background-color: #10b981; /* Emerald-500 */
+            color: #ecfdf5; /* Emerald-50 */
+            box-shadow: 0 0 15px #34d399;
             animation: glow 1.5s infinite alternate;
             cursor: default;
         }
         @keyframes glow {
-            from { box-shadow: 0 0 5px #22c55e; }
-            to { box-shadow: 0 0 20px #22c55e, 0 0 30px #34d399; }
+            from { box-shadow: 0 0 5px #34d399; }
+            to { box-shadow: 0 0 20px #6ee7b7; }
         }
         .quiz-btn {
-             background: linear-gradient(to right, #6366f1, #8b5cf6);
-             color: white;
+             background-color: #57534e; /* stone-600 */
+             color: #f5f5f4; /* stone-100 */
              padding: 0.6rem 1.25rem;
              border-radius: 9999px;
              font-weight: 600;
-             transition: transform 0.2s, box-shadow 0.2s;
+             transition: all 0.2s;
              cursor: pointer;
              border: none;
              box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
         .quiz-btn:hover {
+            background-color: #78716c; /* stone-500 */
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.3);
         }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-100">
+<body class="bg-stone-950 text-stone-200">
 
     <!-- Header -->
-    <header class="sticky top-0 z-50 bg-gray-900/70 backdrop-blur-lg px-4 sm:px-6 py-4">
+    <header class="sticky top-0 z-50 bg-stone-950/70 backdrop-blur-lg px-4 sm:px-6 py-4">
         <div class="container mx-auto">
             <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">The Bible Catalog</h1>
-            <p class="text-gray-400 mt-1 text-sm sm:text-base">An episodic journey. Click a card to flip.</p>
+            <p class="text-stone-400 mt-1 text-sm sm:text-base">An episodic journey. Click a card to flip.</p>
             
             <!-- Progress Tracker -->
             <div id="progress-tracker" class="mt-4">
                 <div class="flex justify-between items-center mb-1">
-                    <span class="text-sm font-medium text-green-400">Your Progress</span>
-                    <span id="progress-text" class="text-sm font-medium text-gray-400">0 / 0 Completed</span>
+                    <span class="text-sm font-medium text-emerald-400">Your Progress</span>
+                    <span id="progress-text" class="text-sm font-medium text-stone-400">0 / 0 Completed</span>
                 </div>
                 <div class="w-full progress-bar-bg h-2.5">
                     <div id="progress-bar" class="progress-bar-fg" style="width: 0%"></div>
@@ -208,15 +211,15 @@
     <div id="quiz-modal" class="quiz-modal">
         <div class="quiz-content">
             <h2 id="quiz-title" class="text-2xl font-bold text-white mb-4">Arrange in Order</h2>
-            <p class="text-gray-400 mb-6">Drag and drop the items into the correct sequence.</p>
+            <p class="text-stone-400 mb-6">Drag and drop the items into the correct sequence.</p>
             <ul id="quiz-list"></ul>
             <button id="close-quiz-btn" class="quiz-btn mt-6">Close</button>
         </div>
     </div>
 
     <!-- Footer -->
-    <footer class="bg-gray-900/50 mt-8">
-        <div class="container mx-auto px-6 py-4 text-center text-gray-500">
+    <footer class="bg-stone-950/50 mt-8">
+        <div class="container mx-auto px-6 py-4 text-center text-stone-500">
             <p>&copy; 2024 Visual Bible Catalog. All rights reserved.</p>
         </div>
     </footer>
@@ -270,13 +273,13 @@
             const mainContent = document.getElementById('main-content');
             
             const tagColorClasses = [
-                'bg-blue-400/20 text-blue-300',
-                'bg-red-400/20 text-red-300',
-                'bg-green-400/20 text-green-300',
-                'bg-yellow-400/20 text-yellow-300',
-                'bg-purple-400/20 text-purple-300',
-                'bg-pink-400/20 text-pink-300',
-                'bg-indigo-400/20 text-indigo-300'
+                'bg-sky-400/10 text-sky-300',
+                'bg-rose-400/10 text-rose-300',
+                'bg-emerald-400/10 text-emerald-300',
+                'bg-amber-400/10 text-amber-300',
+                'bg-violet-400/10 text-violet-300',
+                'bg-fuchsia-400/10 text-fuchsia-300',
+                'bg-teal-400/10 text-teal-300'
             ];
 
             const getTagColorClass = (tag) => {
@@ -305,11 +308,11 @@
                                     <div class="episode-card-inner">
                                         <div class="card-front">
                                             <div class="completion-check"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
-                                            <div class="flex justify-between items-start"><h3 class="text-xl font-bold text-white pr-2">${episode.title}</h3><span class="text-sm font-medium text-gray-400 flex-shrink-0">${episode.chapters}</span></div>
+                                            <div class="flex justify-between items-start"><h3 class="text-xl font-bold text-white pr-2">${episode.title}</h3><span class="text-sm font-medium text-stone-400 flex-shrink-0">${episode.chapters}</span></div>
                                             <div class="mt-4 flex flex-wrap gap-2">${tagsHtml}</div>
                                         </div>
                                         <div class="card-back">
-                                            <p class="text-gray-200 mb-4">${episode.subtitle}</p>
+                                            <p class="text-stone-300 mb-4">${episode.subtitle}</p>
                                             <button class="quiz-btn start-quiz-btn" 
                                                 data-jumbled='${JSON.stringify(episode.quiz.jumbled).replace(/'/g, "&apos;")}' 
                                                 data-ordered='${JSON.stringify(episode.quiz.ordered).replace(/'/g, "&apos;")}'>
@@ -328,14 +331,14 @@
 
             function getSeasonGradient(index) {
                 const gradients = [
-                    'bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500',
-                    'bg-gradient-to-br from-red-500 via-orange-500 to-yellow-400',
-                    'bg-gradient-to-br from-yellow-300 via-stone-400 to-gray-200'
+                    'bg-gradient-to-br from-slate-900 to-sky-800',
+                    'bg-gradient-to-br from-rose-900 to-amber-800',
+                    'bg-gradient-to-br from-violet-900 to-indigo-800'
                 ];
                 return gradients[index % gradients.length];
             }
              function getSeasonQuoteColor(index) {
-                const colors = ['text-purple-200', 'text-yellow-200', 'text-gray-800'];
+                const colors = ['text-sky-300', 'text-amber-300', 'text-indigo-300'];
                 return colors[index % colors.length];
             }
             function getSeasonIcon(index) {
@@ -427,25 +430,56 @@
                 });
             }
 
+            // --- Drag and Drop Logic for Mouse and Touch ---
             let draggedItem = null;
-            quizList.addEventListener('dragstart', (e) => {
+
+            const handleDragStart = (e) => {
                 draggedItem = e.target;
                 setTimeout(() => e.target.classList.add('dragging'), 0);
-            });
-            quizList.addEventListener('dragend', (e) => {
+            };
+
+            const handleDragEnd = (e) => {
                 e.target.classList.remove('dragging');
                 checkOrder();
-            });
-            quizList.addEventListener('dragover', (e) => {
+            };
+            
+            const handleDragOver = (e) => {
                 e.preventDefault();
-                const afterElement = getDragAfterElement(quizList, e.clientY);
-                const draggable = document.querySelector('.dragging');
-                if (afterElement == null) {
-                    quizList.appendChild(draggable);
-                } else {
-                    quizList.insertBefore(draggable, afterElement);
+                const clientY = e.clientY || e.touches[0].clientY;
+                const afterElement = getDragAfterElement(quizList, clientY);
+                if (draggedItem) {
+                    if (afterElement == null) {
+                        quizList.appendChild(draggedItem);
+                    } else {
+                        quizList.insertBefore(draggedItem, afterElement);
+                    }
                 }
+            };
+            
+            quizList.addEventListener('dragstart', handleDragStart);
+            quizList.addEventListener('dragend', handleDragEnd);
+            quizList.addEventListener('dragover', handleDragOver);
+
+            quizList.addEventListener('touchstart', (e) => {
+                if(e.target.tagName === 'LI') {
+                    handleDragStart(e);
+                }
+            }, { passive: false });
+
+            quizList.addEventListener('touchend', (e) => {
+                 if(draggedItem) {
+                    handleDragEnd({target: draggedItem}); // Pass the dragged item as the target
+                    draggedItem = null;
+                 }
             });
+            
+            quizList.addEventListener('touchmove', (e) => {
+                if (draggedItem) {
+                    e.preventDefault();
+                    handleDragOver(e);
+                }
+            }, { passive: false });
+
 
             function getDragAfterElement(container, y) {
                 const draggableElements = [...container.querySelectorAll('li:not(.dragging)')];
@@ -467,7 +501,10 @@
 
                 if (isCorrect) {
                     quizList.classList.add('correct');
-                    currentItems.forEach(item => item.setAttribute('draggable', 'false'));
+                    currentItems.forEach(item => {
+                        item.setAttribute('draggable', 'false');
+                        item.style.cursor = 'default';
+                    });
                     if (currentQuizId) {
                         saveCompletedQuiz(currentQuizId);
                         updateProgressUI();
